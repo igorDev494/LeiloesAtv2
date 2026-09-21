@@ -1,0 +1,90 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
+/**
+ *
+ * @author Adm
+ */
+
+import java.sql.PreparedStatement;
+import java.sql.Connection;
+import javax.swing.JOptionPane;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+
+
+public class ProdutosDAO {
+    
+    Connection conn;
+    PreparedStatement prep;
+    ResultSet rs;
+    ArrayList<ProdutosDTO> listagem = new ArrayList<>();
+    
+    public void cadastrarProduto (ProdutosDTO produto){
+        
+       String sql = "INSERT INTO produtos (nome, valor, status) VALUES (?, ?, ?)";
+        
+       conn = new conectaDAO().connectDB();
+       
+       try {
+        prep = conn.prepareStatement(sql);
+        
+        // 3. Passa os dados do DTO para as interrogações (?) do SQL
+        prep.setString(1, produto.getNome());
+        prep.setInt(2, produto.getValor());
+        prep.setString(3, produto.getStatus());
+        
+        // 4. CRÍTICO: Esta é a linha que grava os dados de fato no MySQL!
+        prep.execute(); 
+        
+        // 5. Fecha o prepareStatement
+        prep.close();
+        
+    } catch (Exception erro) {
+        System.out.println("Erro ao cadastrar produto no DAO: " + erro.getMessage());
+    }
+}
+       
+        
+        
+    
+    
+    public ArrayList<ProdutosDTO> listarProdutos(){        
+        String sql = "SELECT * FROM produtos";
+        
+         conn = new conectaDAO().connectDB();
+        
+        try {
+            prep = conn.prepareStatement(sql);
+            rs = prep.executeQuery(); // executeQuery roda o SELECT no banco de dados
+            
+            // 3. O Java lê linha por linha do MySQL e joga na lista do NetBeans
+            while (rs.next()) {
+                ProdutosDTO produto = new ProdutosDTO();
+                
+                // ATENÇÃO: O texto entre aspas deve ser IGUAL aos nomes das colunas no seu MySQL
+                produto.setId(rs.getInt("id")); 
+                produto.setNome(rs.getString("nome"));
+                produto.setValor(rs.getInt("valor"));
+                produto.setStatus(rs.getString("status"));
+                
+                listagem.add(produto); // Adiciona o produto na lista que vai para a JTable
+            }
+            
+        } catch (Exception erro) {
+            System.out.println("Erro ao rodar o SELECT no ProdutosDAO: " + erro.getMessage());
+        } finally {
+            // Fecha os recursos do banco por segurança
+            try { if (rs != null) rs.close(); if (prep != null) prep.close(); } catch (Exception e) {}
+        }
+        
+        return listagem;
+    }
+    
+    
+    
+        
+}
+
